@@ -140,11 +140,16 @@ file.subscribe((file) => {
     logger.info('Questions data processed');
 
     // Process alternatives data
-    alternativesData.forEach((row: any) => {
+    alternativesData.forEach((row: any, i) => {
       const page = row.Page;
       if (!pages[page]) return;
 
-      const question = pages[page].questions.find(q => q.itemRank === row.ItemRank);
+      let question = pages[page].questions.find(q => q.itemRank === row.ItemRank && q.diplome === row.Diplome);
+      if (!question) return;
+
+      if (question.alternatives.length > 3) {
+        question = pages[page].questions.findLast(q => q.itemRank === row.ItemRank && q.diplome === row.Diplome);
+      }
       if (!question) return;
 
       const alternative: Alternative = {
@@ -155,7 +160,7 @@ file.subscribe((file) => {
         itemRank: row.ItemRank,
         interactionType: row.Inter_type,
         interactionMode: row.cardinality,
-        choiceId: row.answer_Id,  
+        choiceId: row.answer_Id,
         text: row.Answer,
         isCorrect: row.correct === 'TRUE',
         pct: row.chosen_pct,
@@ -166,7 +171,13 @@ file.subscribe((file) => {
       };
 
       question.alternatives.push(alternative);
+      if(question.alternatives.length === 4){
+        question.alternatives.sort((a, b) =>
+          a.isCorrect === b.isCorrect ? 0 : a.isCorrect ? -1 : 1
+        );
+      }
     });
+
     logger.info('Alternatives data processed');
 
     pagesData.set(pages);

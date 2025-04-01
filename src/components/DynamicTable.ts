@@ -1,0 +1,20 @@
+export let visibleColumns: Record<string, boolean> = {
+  page: false,
+  itemRank: true,
+  instruction: false,
+  duration_mean: true,
+  duration_sd: true,
+  testCode: false,
+  diplome: true,
+  nCandidates: true,
+  correct_pct: true,
+  incorrect_pct: true,
+  empty_pct: true,
+  not_seen_pct: false,
+  answered_pct: true,
+  difficulty: false,
+  discr_comp: true,
+  discr_test: true,
+  d_index_comp: true,
+  d_index_test: true
+};

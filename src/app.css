@@ -1,0 +1,28 @@
+:root {
+  margin: 0;
+  padding: 0;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 1.2rem;
+}
+
+@media print {
+
+  .hide-print {
+    display: none !important;
+  }
+
+  .show-print {
+    display: block !important;
+  }
+
+  .new-page {
+    page-break-before: always
+  }
+}
+
+.show-print {
+  display: none;
+}
