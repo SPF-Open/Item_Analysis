@@ -1,6 +1,5 @@
 import { writable } from "svelte/store";
 import { read, utils } from "xlsx";
-import { logger } from "./error";
 
 export const file = writable<File | null>(null);
 export const pagesData = writable<Record<number, PageInfo> | null>(null);
@@ -62,30 +61,25 @@ export interface Alternative {
 file.subscribe((file) => {
   if (!file) return;
   if (file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
-    logger.error('File is not a valid Excel file');
     return;
   }
   const reader = new FileReader();
   reader.onload = (event) => {
     const data = event.target?.result as ArrayBuffer;
     const workbook = read(data, { type: 'array' });
-    logger.info('Workbook loaded');
 
     // Get all sheets
     const speedPages = workbook.Sheets['Speed_Pages'];
     const questions = workbook.Sheets['Questions'];
     const alternatives = workbook.Sheets['Alternatives'];
-    logger.info('Sheets loaded');
 
     // Convert sheets to JSON
     const speedPagesData = utils.sheet_to_json(speedPages);
     const questionsData = utils.sheet_to_json(questions);
     const alternativesData = utils.sheet_to_json(alternatives);
-    logger.info('Sheets converted to JSON');
 
     // Create pages object
     const pages: Record<number, PageInfo> = {};
-    logger.info('Pages object created');
 
     // Process speed pages data
     speedPagesData.forEach((row: any) => {
@@ -107,7 +101,6 @@ file.subscribe((file) => {
         };
       }
     });
-    logger.info('Speed pages data processed');
 
     // Process questions data
     questionsData.forEach((row: any) => {
@@ -137,7 +130,6 @@ file.subscribe((file) => {
 
       pages[page].questions.push(question);
     });
-    logger.info('Questions data processed');
 
     // Process alternatives data
     alternativesData.forEach((row: any, i) => {
@@ -178,10 +170,7 @@ file.subscribe((file) => {
       }
     });
 
-    logger.info('Alternatives data processed');
-
     pagesData.set(pages);
-    logger.info('Pages object set');
   };
   reader.readAsArrayBuffer(file);
 }); 

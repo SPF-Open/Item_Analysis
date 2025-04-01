@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button, Card, Switch, Table } from "@gzlab/uui";
+  import { Button, Card, Switch, Table, ToolTip } from "@gzlab/uui";
   import type { PageInfo } from "../lib/store";
-  import { visibleColumns } from "./DynamicTable";
+  import { visibleColumns, colorRules } from "./DynamicTable";
 
   export let pagesData: Record<number, PageInfo>;
 
@@ -9,29 +9,86 @@
   type Column = {
     id: string;
     label: string;
+    tooltip?: string;
     renderer: (row: any) => string;
   };
 
   // Configure your columns here (the renderer formats the cell value)
   let columns: Column[] = [
     { id: "page", label: "Page", renderer: (row) => row.page },
-    { id: "itemRank", label: "Item", renderer: (row) => row.itemRank },
-    { id: "instruction", label: "Instruction", renderer: (row) => row.instruction },
-    { id: "duration_mean", label: "Duration Mean", renderer: (row) => row.duration_mean.toFixed(2) + "s" },
-    { id: "duration_sd", label: "Duration SD", renderer: (row) => row.duration_sd.toFixed(2) + "s" },
+    { id: "itemRank", label: "Item", renderer: (row) => row.itemRank},
+    {
+      id: "instruction",
+      label: "Instruction",
+      renderer: (row) => row.instruction,
+    },
+    {
+      id: "duration_mean",
+      label: "Mean",
+      renderer: (row) => row.duration_mean.toFixed(2) + "s",
+    },
+    {
+      id: "duration_sd",
+      label: "SD",
+      renderer: (row) => row.duration_sd.toFixed(2) + "s",
+    },
     { id: "testCode", label: "Test Code", renderer: (row) => row.testCode },
     { id: "diplome", label: "Diploma", renderer: (row) => row.diplome },
-    { id: "nCandidates", label: "N Candidates", renderer: (row) => row.nCandidates },
-    { id: "correct_pct", label: "Correct %", renderer: (row) => row.correct_pct.toFixed(2) + "%" },
-    { id: "incorrect_pct", label: "Incorrect %", renderer: (row) => row.incorrect_pct.toFixed(2) + "%" },
-    { id: "empty_pct", label: "Empty %", renderer: (row) => row.empty_pct.toFixed(2) + "%" },
-    { id: "not_seen_pct", label: "Not Seen %", renderer: (row) => row.not_seen_pct.toFixed(2) + "%" },
-    { id: "answered_pct", label: "Answered %", renderer: (row) => row.answered_pct.toFixed(2) + "%" },
-    { id: "difficulty", label: "Difficulty", renderer: (row) => row.difficulty.toFixed(4) },
-    { id: "discr_comp", label: "Discr Comp", renderer: (row) => row.discr_comp.toFixed(4) },
-    { id: "discr_test", label: "Discr Test", renderer: (row) => row.discr_test.toFixed(4) },
-    { id: "d_index_comp", label: "D-Index Comp", renderer: (row) => row.d_index_comp.toFixed(4) },
-    { id: "d_index_test", label: "D-Index Test", renderer: (row) => row.d_index_test.toFixed(4) }
+    {
+      id: "nCandidates",
+      label: "Total",
+      renderer: (row) => row.nCandidates,
+    },
+    {
+      id: "correct_pct",
+      label: "Correct %",
+      renderer: (row) => row.correct_pct.toFixed(2) + "%",
+    },
+    {
+      id: "incorrect_pct",
+      label: "Incorrect %",
+      renderer: (row) => row.incorrect_pct.toFixed(2) + "%",
+    },
+    {
+      id: "empty_pct",
+      label: "Empty %",
+      renderer: (row) => row.empty_pct.toFixed(2) + "%",
+    },
+    {
+      id: "not_seen_pct",
+      label: "Not Seen %",
+      renderer: (row) => row.not_seen_pct.toFixed(2) + "%",
+    },
+    {
+      id: "answered_pct",
+      label: "Answered %",
+      renderer: (row) => row.answered_pct.toFixed(2) + "%",
+    },
+    {
+      id: "difficulty",
+      label: "Difficulty",
+      renderer: (row) => row.difficulty.toFixed(4),
+    },
+    {
+      id: "discr_comp",
+      label: "Discr Comp",
+      renderer: (row) => row.discr_comp.toFixed(4),
+    },
+    {
+      id: "discr_test",
+      label: "Discr Test",
+      renderer: (row) => row.discr_test.toFixed(4),
+    },
+    {
+      id: "d_index_comp",
+      label: "D-Index Comp",
+      renderer: (row) => row.d_index_comp.toFixed(4),
+    },
+    {
+      id: "d_index_test",
+      label: "D-Index Test",
+      renderer: (row) => row.d_index_test.toFixed(4),
+    },
   ];
 
   // Toggle for the alternatives column(s)
@@ -42,21 +99,34 @@
 
   // Define groups with associated column IDs
   const groups = [
+    { label: "Duration", ids: ["duration_mean", "duration_sd"] },
     { label: "Candidats", ids: ["diplome", "nCandidates"] },
     { label: "Difficulté", ids: ["correct_pct", "incorrect_pct"] },
-    { label: "Abstentions", ids: ["empty_pct", "not_seen_pct", "answered_pct"] },
-    { label: "Indices", ids: ["difficulty", "discr_comp", "discr_test", "d_index_comp", "d_index_test"] },
+    {
+      label: "Abstentions",
+      ids: ["empty_pct", "not_seen_pct", "answered_pct"],
+    },
+    {
+      label: "Indices",
+      ids: [
+        "difficulty",
+        "discr_comp",
+        "discr_test",
+        "d_index_comp",
+        "d_index_test",
+      ],
+    },
   ];
 
   // Create a set of all grouped column IDs
-  const groupedIds = new Set(groups.flatMap(group => group.ids));
+  const groupedIds = new Set(groups.flatMap((group) => group.ids));
 
   // Non-grouped columns are those not part of any group
-  const nonGroupColumns = columns.filter(col => !groupedIds.has(col.id));
+  const nonGroupColumns = columns.filter((col) => !groupedIds.has(col.id));
 
   // Mapping from column id to column object
   let colMap: Record<string, Column> = {};
-  columns.forEach(col => {
+  columns.forEach((col) => {
     colMap[col.id] = col;
   });
 
@@ -71,6 +141,44 @@
       duration_sd: page.duration.sd,
     }))
   );
+
+  // Helper function to determine if a column is the last visible in its group
+  function getGroupBorderClass(colId: string): string {
+    for (const group of groups) {
+      if (group.ids.includes(colId)) {
+        const visibleGroupCols = group.ids.filter((id) => visibleColumns[id]);
+        if (
+          visibleGroupCols.length &&
+          visibleGroupCols[visibleGroupCols.length - 1] === colId
+        ) {
+          return "group-border";
+        }
+        return "";
+      }
+    }
+    return "group-border";
+  }
+
+  // Helper function to apply color rules if defined and cell value is numeric.
+  function getColorClass(colId: string, cellValue: any): string {
+    const rule = colorRules[colId];
+    if (rule && typeof cellValue === "number") {
+      if (cellValue < rule.max && cellValue > rule.min) return rule.inClass;
+      if (cellValue < rule.min) return rule.belowClass;
+      if (cellValue > rule.max) return rule.aboveClass;
+      return "";
+    }
+    return "";
+  }
+
+  // Helper function for alternatives heat map styling.
+  function getAltHeatClass(alt: { pct: number; isCorrect: boolean }): string {
+    const ideal = alt.isCorrect ? 34 : 22;
+    const diff = Math.abs(alt.pct - ideal);
+    if (diff < 3) return "heat-low";
+    if (diff < 7) return "heat-medium";
+    return "heat-high";
+  }
 </script>
 
 <div class="hide-print">
@@ -107,13 +215,22 @@
       <tr>
         {#each nonGroupColumns as col}
           {#if visibleColumns[col.id]}
-            <th rowspan="2">{col.label}</th>
+            <th rowspan="2" class="group-border"
+              >{col.label}
+              {#if col.tooltip}
+                <ToolTip>{col.tooltip}</ToolTip>
+              {/if}
+            </th>
           {/if}
         {/each}
         {#each groups as group}
-          {@const visibleCount = group.ids.filter(id => visibleColumns[id]).length}
+          {@const visibleCount = group.ids.filter(
+            (id) => visibleColumns[id]
+          ).length}
           {#if visibleCount > 0}
-            <th colspan={visibleCount} class="txt-center">{group.label}</th>
+            <th colspan={visibleCount} class="txt-center group-header"
+              >{group.label}</th
+            >
           {/if}
         {/each}
         {#if showAlternatives}
@@ -125,7 +242,12 @@
         {#each groups as group}
           {#each group.ids as colId}
             {#if visibleColumns[colId]}
-              <th>{colMap[colId].label}</th>
+              <th class={getGroupBorderClass(colId)}>
+                {colMap[colId].label}
+                {#if colMap[colId].tooltip}
+                  <ToolTip>{colMap[colId].tooltip}</ToolTip>
+                {/if}
+              </th>
             {/if}
           {/each}
         {/each}
@@ -136,18 +258,28 @@
         <tr>
           {#each columns as col}
             {#if visibleColumns[col.id]}
-              <td>{col.renderer(row)}</td>
+              <td
+                class="{getColorClass(
+                  col.id,
+                  row[col.id]
+                )} {getGroupBorderClass(col.id)}"
+              >
+                {col.renderer(row)}
+              </td>
             {/if}
           {/each}
           {#if showAlternatives}
             {#each row.alternatives as alt}
-              <td>
+              <td
+                class={getAltHeatClass(alt)}
+                style="width: {alt.isCorrect ? '34%' : '22%'}"
+              >
                 <span class="text-right" class:correct={alt.isCorrect}>
                   {alt.pct.toFixed(2)}%
                 </span>
               </td>
             {/each}
-            <td>
+            <td class="hide-print">
               <Button type="icon">🔍</Button>
             </td>
           {/if}
@@ -158,17 +290,28 @@
 </div>
 
 <style>
+  .red {
+    background-color: #fdd;
+  }
+  .orange {
+    background-color: #ffd;
+  }
+  .green {
+    background-color: #dfd;
+  }
   .correct {
     font-weight: bold;
   }
-  th, td {
+  th,
+  td {
     white-space: nowrap;
     font-size: 0.8rem;
     padding: 0.5em;
     width: fit-content;
     text-align: left;
+    border: 1px solid #ccccccac;
   }
-  .txt-center{
+  .txt-center {
     text-align: center !important;
   }
   .switch {
@@ -184,6 +327,22 @@
     gap: 0.3rem;
     width: 100%;
   }
-  .red{}
-  .green{}
+  /* Heat map styles for alternatives */
+  .heat-low {
+    background-color: #dff0d8; /* light green */
+  }
+  .heat-medium {
+    background-color: #fcf8e3; /* light yellow */
+  }
+  .heat-high {
+    background-color: #f2dede; /* light red */
+  }
+  .group-header,
+  .group-border {
+    border-right: 2px solid #ccc;
+  }
+  /* Ensure table cells join their borders */
+  .table > :global(table) {
+    border-collapse: collapse;
+  }
 </style>
