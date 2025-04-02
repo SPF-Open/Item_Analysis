@@ -1,20 +1,13 @@
 <script lang="ts">
   import "@gzlab/uui/main.css";
-  import FileInput from "./FileInput.svelte";
   import { file, pagesData } from "./lib/store";
   import DynamicTable from "./components/DynamicTable.svelte";
+  import Header from "./components/Header.svelte";
   import Summary from "./components/Summary.svelte";
 </script>
 
-<main>
-  <div class="mb-8 hide-print">
-    <FileInput
-      label="Upload File"
-      bind:file={$file}
-      name="file"
-      accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
-    />
-  </div>
+<main class:center={!$file}>
+  <Header />
 
   {#if $pagesData}
     <Summary />
@@ -28,11 +21,17 @@
     flex-direction: column;
     gap: 0.6rem;
     margin: 0.3rem;
+    min-height: calc(100vh - 0.6rem);
   }
   @media print {
     main {
       margin: 0rem;
       max-width: calc();
     }
+  }
+  .langList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
   }
 </style>

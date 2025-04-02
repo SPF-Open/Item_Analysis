@@ -1,69 +1,28 @@
 <script>
   import { Card } from "@gzlab/uui";
-  import { pagesData } from "../lib/store";
+  import { testInfo } from "../lib/store";
 </script>
 
-<Card>
-  <div class="title" slot="title">Summary</div>
-  <div class="flex">
-    <Card size="md">
-      <div class="title" slot="title">Test</div>
-      <div class="body">
-        <span>
-        </span>
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit possimus,
-        facilis praesentium labore quasi perferendis vero velit quam corporis
-        ipsum laborum facere fugit recusandae? Voluptates pariatur nostrum
-        eveniet molestias reiciendis?
-      </div>
-    </Card>
-    <Card size="md">
-      <div class="title" slot="title">Item</div>
-      <div class="body">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit possimus,
-        facilis praesentium labore quasi perferendis vero velit quam corporis
-        ipsum laborum facere fugit recusandae? Voluptates pariatur nostrum
-        eveniet molestias reiciendis?
-      </div>
-    </Card>
-    <Card size="md">
-      <div class="title" slot="title">Candidats</div>
-      <div class="body">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit possimus,
-        facilis praesentium labore quasi perferendis vero velit quam corporis
-        ipsum laborum facere fugit recusandae? Voluptates pariatur nostrum
-        eveniet molestias reiciendis?
-      </div>
-    </Card>
-    <Card size="md">
-      <div class="title" slot="title">Réponse</div>
-      <div class="body">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit possimus,
-        facilis praesentium labore quasi perferendis vero velit quam corporis
-        ipsum laborum facere fugit recusandae? Voluptates pariatur nostrum
-        eveniet molestias reiciendis?
-      </div>
-    </Card>
-    <Card size="md">
-      <div class="title" slot="title">Difficulté + discrimination</div>
-      <div class="body">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit possimus,
-        facilis praesentium labore quasi perferendis vero velit quam corporis
-        ipsum laborum facere fugit recusandae? Voluptates pariatur nostrum
-        eveniet molestias reiciendis?
-      </div>
-    </Card>
-    <Card size="md">
-      <div class="title" slot="title">Alternatives</div>
-      <div class="body">
-        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Sit possimus,
-        facilis praesentium labore quasi perferendis vero velit quam corporis
-        ipsum laborum facere fugit recusandae? Voluptates pariatur nostrum
-        eveniet molestias reiciendis?
-      </div>
-    </Card>
+{#if $testInfo}
+  <div class="flex-h hide-print">
+    <div class="flex-h">
+      {#each $testInfo as info}
+        <Card size="md">
+          <span slot="title">{info.name}</span>
+          <div class="flex-h">
+            {#each info.diplome as diplome}
+              <Card>
+                <span slot="title">{diplome.name}</span>
+                <p>Question : {diplome.questionNb}</p>
+                <p>Candidate : {diplome.candidateNb}</p>
+              </Card>
+            {/each}
+          </div>
+        </Card>
+      {/each}
+    </div>
   </div>
-</Card>
+{/if}
 
 <style>
   .flex {

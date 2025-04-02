@@ -1,5 +1,15 @@
 <script lang="ts">
-  import { Button, Card, Switch, Table, ToolTip } from "@gzlab/uui";
+  import {
+    Button,
+    Card,
+    ComboBox,
+    ComboBoxElement,
+    LongText,
+    Modal,
+    Switch,
+    Table,
+    ToolTip,
+  } from "@gzlab/uui";
   import type { PageInfo } from "../lib/store";
   import { visibleColumns, colorRules } from "./DynamicTable";
 
@@ -16,7 +26,7 @@
   // Configure your columns here (the renderer formats the cell value)
   let columns: Column[] = [
     { id: "page", label: "Page", renderer: (row) => row.page },
-    { id: "itemRank", label: "Item", renderer: (row) => row.itemRank},
+    { id: "itemRank", label: "Item", renderer: (row) => row.itemRank },
     {
       id: "instruction",
       label: "Instruction",
@@ -101,7 +111,7 @@
   const groups = [
     { label: "Duration", ids: ["duration_mean", "duration_sd"] },
     { label: "Candidats", ids: ["diplome", "nCandidates"] },
-    { label: "Difficulté", ids: ["correct_pct", "incorrect_pct"] },
+    { label: "Difficulty", ids: ["correct_pct", "incorrect_pct"] },
     {
       label: "Abstentions",
       ids: ["empty_pct", "not_seen_pct", "answered_pct"],
@@ -179,6 +189,19 @@
     if (diff < 7) return "heat-medium";
     return "heat-high";
   }
+
+  let showModal = false;
+  let selectedRow: any = null;
+
+  function openModal(row: any) {
+    selectedRow = row;
+    showModal = true;
+  }
+
+  function closeModal() {
+    showModal = false;
+    selectedRow = null;
+  }
 </script>
 
 <div class="hide-print">
@@ -234,8 +257,9 @@
           {/if}
         {/each}
         {#if showAlternatives}
-          <th rowspan="2" colspan="5" class="txt-center">Alternatives</th>
+          <th rowspan="1" colspan="4" class="txt-center">Alternatives</th>
         {/if}
+        <th rowspan="2" class="hide-print"></th>
       </tr>
       <!-- Second header row: individual headers for grouped columns -->
       <tr>
@@ -251,6 +275,12 @@
             {/if}
           {/each}
         {/each}
+        {#if showAlternatives}
+          <th class="txt-center"> Correct </th>
+          <th class="txt-center">B</th>
+          <th class="txt-center">C</th>
+          <th class="txt-center">D</th>
+        {/if}
       </tr>
     </thead>
     <tbody>
@@ -280,7 +310,7 @@
               </td>
             {/each}
             <td class="hide-print">
-              <Button type="icon">🔍</Button>
+              <Button type="icon" onClick={() => openModal(row)}>🔍</Button>
             </td>
           {/if}
         </tr>
@@ -288,6 +318,70 @@
     </tbody>
   </Table>
 </div>
+
+{#if showModal}
+  <Modal bind:state={showModal} size="">
+    <svelte:fragment slot="title">
+      <h3>Details for item : {selectedRow.itemRank}</h3>
+    </svelte:fragment>
+    <div class="modal-content">
+      <!-- Display detailed row info -->
+      {#if selectedRow}
+        <div>
+          <div class="flex-h">
+            {#each selectedRow.alternatives as alt, index}
+              <Card size="lg" status={alt.isCorrect ? "success" : undefined}>
+                <div slot="title" class="title">
+                  <span>
+                    Alternative {index + 1}
+                  </span>
+                  <span>
+                    {alt.pct.toFixed(2)}%
+                  </span>
+                </div>
+                <div>
+                  {alt.text}
+                </div>
+              </Card>
+            {/each}
+          </div>
+        </div>
+      {/if}
+      <!-- Additional alternatives info and actions -->
+    </div>
+    <div class="modal-actions" slot="footer">
+      <LongText
+        cols={190}
+        rows={4}
+        placeholder="Additional info"
+        bind:value={selectedRow.extraInfo}
+      />
+      <div class="flex-h">
+        <ComboBox>
+          <div slot="selected">
+            {selectedRow.action || "Choisir une action"}
+          </div>
+          <div slot="list">
+            <ComboBoxElement value="archive" bind:selection={selectedRow.action}
+              >Archiver</ComboBoxElement
+            >
+            <ComboBoxElement value="change" bind:selection={selectedRow.action}
+              >Modifier la bonne réponse</ComboBoxElement
+            >
+            <ComboBoxElement value="delete" bind:selection={selectedRow.action}
+              >Supprimer</ComboBoxElement
+            >
+            <ComboBoxElement value="other" bind:selection={selectedRow.action}
+              >Autre</ComboBoxElement
+            >
+          </div>
+        </ComboBox>
+        <Button type="danger">Cancel</Button>
+        <Button type="success">Save</Button>
+      </div>
+    </div>
+  </Modal>
+{/if}
 
 <style>
   .red {
@@ -310,6 +404,9 @@
     width: fit-content;
     text-align: left;
     border: 1px solid #ccccccac;
+  }
+  td {
+    text-align: right;
   }
   .txt-center {
     text-align: center !important;
@@ -344,5 +441,22 @@
   /* Ensure table cells join their borders */
   .table > :global(table) {
     border-collapse: collapse;
+  }
+  .modal-content {
+    padding: 1rem;
+    max-height: 62vh;
+    width: min(1600px, 80vw);
+    overflow-y: scroll;
+    overflow-x: hidden;
+  }
+  .modal-actions {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .modal-content .title {
+    display: flex;
+    justify-content: space-between;
   }
 </style>

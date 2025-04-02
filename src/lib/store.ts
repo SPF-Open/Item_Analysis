@@ -3,6 +3,14 @@ import { read, utils } from "xlsx";
 
 export const file = writable<File | null>(null);
 export const pagesData = writable<Record<number, PageInfo> | null>(null);
+export const testInfo = writable<TestInfo[] | null>(null)
+
+export interface TestInfo {
+  name: string
+  diplome: { name: string, candidateNb: number, questionNb: number }[]
+  page: number,
+  question: number;
+}
 
 export interface PageInfo {
   page: number;
@@ -59,7 +67,10 @@ export interface Alternative {
 }
 
 file.subscribe((file) => {
-  if (!file) return;
+  if (!file) {
+    pagesData.set(null)
+    return;
+  }
   if (file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
     return;
   }
@@ -163,14 +174,55 @@ file.subscribe((file) => {
       };
 
       question.alternatives.push(alternative);
-      if(question.alternatives.length === 4){
+      if (question.alternatives.length === 4) {
         question.alternatives.sort((a, b) =>
           a.isCorrect === b.isCorrect ? 0 : a.isCorrect ? -1 : 1
         );
       }
     });
 
+    // Populate testInfo from questionsData
+    const testMap = new Map<string, { 
+      name: string, 
+      diplomeMap: Map<string, { name: string, candidateNb: number, questionNb: number }>,
+      page: number, 
+      question: number 
+    }>();
+
+    questionsData.forEach((row: any) => {
+      const testCode = row.TestCode;
+      if (!testMap.has(testCode)) {
+        testMap.set(testCode, {
+          name: testCode,
+          diplomeMap: new Map(),
+          page: row.Page,
+          question: row.ItemRank
+        });
+      }
+      const entry = testMap.get(testCode)!;
+      // Update diplome info
+      if (!entry.diplomeMap.has(row.Diplome)) {
+        entry.diplomeMap.set(row.Diplome, { name: row.Diplome, candidateNb: row.nCandidates, questionNb: 0 });
+      }
+      const diplomaEntry = entry.diplomeMap.get(row.Diplome)!;
+      diplomaEntry.questionNb += 1;
+
+      // Optionally choose minimum page and question values
+      if (row.Page < entry.page) entry.page = row.Page;
+      if (row.ItemRank < entry.question) entry.question = row.ItemRank;
+    });
+
+    const testInfoArray = Array.from(testMap.values()).map(entry => ({
+      name: entry.name,
+      diplome: Array.from(entry.diplomeMap.values()),
+      page: entry.page,
+      question: entry.question
+    }));
+
+    testInfo.set(testInfoArray);
+
+    // Set pages data
     pagesData.set(pages);
   };
   reader.readAsArrayBuffer(file);
-}); 
+});
