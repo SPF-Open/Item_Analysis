@@ -186,13 +186,18 @@
     return "";
   }
 
-  // Helper function for alternatives heat map styling.
-  function getAltHeatClass(alt: { pct: number; isCorrect: boolean }): string {
-    const ideal = alt.isCorrect ? 34 : 22;
-    const diff = Math.abs(alt.pct - ideal);
-    if (diff < 3) return "heat-low";
-    if (diff < 7) return "heat-medium";
-    return "heat-high";
+  // Refactored heat map function for alternatives
+  function getAltHeatClass(row: any, alt: { pct: number; isCorrect: boolean }): string {
+    const correctAlt = row.alternatives.find((a: any) => a.isCorrect);
+    const correctPct = correctAlt ? correctAlt.pct : 0;
+    if (!alt.isCorrect) {
+      const diff = alt.pct - correctPct;
+      if (diff > 10) return "heat-high"; // significantly more chosen → red
+      if (diff > 5) return "heat-medium"; // moderately more chosen → orange
+      if (alt.pct < 2) return "heat-cold";  // almost never chosen → "cold" (blue)
+    }
+    // Future improvement: dynamically adjust intensity (e.g. inline style) based on diff.
+    return "";
   }
 
   let showModal = false;
@@ -333,7 +338,7 @@
           {#if showAlternatives}
             {#each row.alternatives as alt}
               <td
-                class={getAltHeatClass(alt)}
+                class={getAltHeatClass(row, alt)}
                 style="width: {alt.isCorrect ? '34%' : '22%'}"
               >
                 <span class="text-right" class:correct={alt.isCorrect}>
@@ -467,6 +472,9 @@
   }
   .heat-high {
     background-color: #f2dede; /* light red */
+  }
+  .heat-cold {
+    background-color: #cce5ff; /* light blue for nearly unchosen alternatives */
   }
   .group-header,
   .group-border {
