@@ -194,7 +194,7 @@
       const diff = alt.pct - correctPct;
       if (diff > 10) return "heat-high"; // significantly more chosen → red
       if (diff > 5) return "heat-medium"; // moderately more chosen → orange
-      if (alt.pct < 2) return "heat-cold";  // almost never chosen → "cold" (blue)
+      if (alt.pct < 10) return "heat-cold";  // almost never chosen → "cold" (blue)
     }
     // Future improvement: dynamically adjust intensity (e.g. inline style) based on diff.
     return "";
