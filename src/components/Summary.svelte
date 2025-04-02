@@ -25,9 +25,4 @@
 {/if}
 
 <style>
-  .flex {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-  }
 </style>

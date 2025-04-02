@@ -12,8 +12,13 @@
   } from "@gzlab/uui";
   import type { PageInfo } from "../lib/store";
   import { visibleColumns, colorRules } from "./DynamicTable";
+  import { read, utils, write } from "xlsx";
+  import { file } from "../lib/store";
 
   export let pagesData: Record<number, PageInfo>;
+
+  let currentFile: File | null = null;
+  file.subscribe((value) => (currentFile = value));
 
   // Define the structure of a column (excluding alternatives)
   type Column = {
@@ -202,6 +207,31 @@
     showModal = false;
     selectedRow = null;
   }
+
+  // New export function to add a new sheet with table rows to the original workbook
+  async function exportToExcel() {
+    if (!currentFile) {
+      alert("No original file available for export.");
+      return;
+    }
+    const arrayBuffer = await currentFile.arrayBuffer();
+    const workbook = read(arrayBuffer, { type: "array" });
+
+    // Create a new sheet from table rows
+    const newSheet = utils.json_to_sheet(rows);
+    const sheetName = "Analysis";
+    workbook.SheetNames.push(sheetName);
+    workbook.Sheets[sheetName] = newSheet;
+
+    const wbout = write(workbook, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([wbout], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "exported.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 <div class="hide-print">
@@ -210,6 +240,8 @@
       <Button onClick={() => (showToggleMenu = !showToggleMenu)} type="info">
         {#if showToggleMenu}Hide Column Menu{:else}Show Column Menu{/if}
       </Button>
+      <!-- New Export Button -->
+      <Button onClick={exportToExcel} type="success">Export Table</Button>
     </svelte:fragment>
     {#if showToggleMenu}
       <div>
@@ -351,13 +383,14 @@
     </div>
     <div class="modal-actions" slot="footer">
       <LongText
+        disabled
         cols={190}
         rows={4}
         placeholder="Additional info"
         bind:value={selectedRow.extraInfo}
       />
       <div class="flex-h">
-        <ComboBox>
+        <ComboBox disabled>
           <div slot="selected">
             {selectedRow.action || "Choisir une action"}
           </div>
@@ -376,8 +409,9 @@
             >
           </div>
         </ComboBox>
-        <Button type="danger">Cancel</Button>
-        <Button type="success">Save</Button>
+        <Button type="danger" onClick={() => (showModal = false)}>Cancel</Button
+        >
+        <Button type="success" disabled>Save</Button>
       </div>
     </div>
   </Modal>
