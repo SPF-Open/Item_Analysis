@@ -29,7 +29,7 @@
       {#each $testInfo as info}
         <Card size="md">
           <span slot="title">{info.name}</span>
-          <div class="flex-h">
+          <div class="flex-h tests">
             {#each info.diplome as diplome}
               <Card>
                 <span slot="title">{diplome.name}</span>
@@ -103,5 +103,8 @@
   }
   .heat-minimap-high {
     background-color: #f2dede; /* light red */
+  }
+  .tests > :global(*){
+    flex: 1;
   }
 </style>

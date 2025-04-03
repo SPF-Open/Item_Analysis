@@ -31,4 +31,7 @@ export let visibleColumns: Record<string, boolean> = {
 export const colorRules: Record<string, ColorRule> = {
   correct_pct: { key: "correct_pct", min: 25, max: 80, belowClass: "red", aboveClass: "orange", inClass: "green" },
   discr_comp: { key: "discr_comp", min: 0.1, max: 0.2, belowClass: "red", aboveClass: "green", inClass: "orange" },
+  discr_test: { key: "discr_test", min: 0.1, max: 0.2, belowClass: "red", aboveClass: "green", inClass: "orange" },
+  d_index_comp: { key: "d_index_comp", min: 0.1, max: 0.2, belowClass: "red", aboveClass: "green", inClass: "orange" },
+  d_index_test: { key: "d_index_test", min: 0.1, max: 0.2, belowClass: "red", aboveClass: "green", inClass: "orange" },
 };

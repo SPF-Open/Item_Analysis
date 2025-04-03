@@ -6,6 +6,7 @@
     ComboBoxElement,
     LongText,
     Modal,
+    Numeric,
     Switch,
     Table,
     ToolTip,
@@ -14,11 +15,9 @@
   import { visibleColumns, colorRules } from "./DynamicTable";
   import { read, utils, write } from "xlsx";
   import { file } from "../lib/store";
+  import { onMount } from "svelte";
 
-  export let pagesData: Record<number, PageInfo>;
-
-  let currentFile: File | null = null;
-  file.subscribe((value) => (currentFile = value));
+  let { pagesData }: { pagesData: Record<number, PageInfo> } = $props();
 
   // Define the structure of a column (excluding alternatives)
   type Column = {
@@ -107,10 +106,10 @@
   ];
 
   // Toggle for the alternatives column(s)
-  let showAlternatives = true;
+  let showAlternatives = $state(true);
 
   // Control to show or hide the column toggle menu
-  let showToggleMenu = false;
+  let showToggleMenu = $state(false);
 
   // Define groups with associated column IDs
   const groups = [
@@ -145,17 +144,21 @@
     colMap[col.id] = col;
   });
 
+  let rows = $state<any | null>(null);
+
   // Flatten page data for table display
-  $: rows = Object.values(pagesData).flatMap((page) =>
-    page.questions.map((question) => ({
-      ...question,
-      // Ensure to add page-level data so the renderer functions work
-      page: page.page ?? "",
-      instruction: page.instruction,
-      duration_mean: page.duration.mean,
-      duration_sd: page.duration.sd,
-    }))
-  );
+  onMount(() => {
+    rows = Object.values(pagesData).flatMap((page) =>
+      page.questions.map((question) => ({
+        ...question,
+        // Ensure to add page-level data so the renderer functions work
+        page: page.page ?? "",
+        instruction: page.instruction,
+        duration_mean: page.duration.mean,
+        duration_sd: page.duration.sd,
+      }))
+    );
+  });
 
   // Helper function to determine if a column is the last visible in its group
   function getGroupBorderClass(colId: string): string {
@@ -178,7 +181,7 @@
   function getColorClass(colId: string, cellValue: any): string {
     const rule = colorRules[colId];
     if (rule && typeof cellValue === "number") {
-      if (cellValue < rule.max && cellValue > rule.min) return rule.inClass;
+      if (cellValue < rule.max && cellValue >= rule.min) return rule.inClass;
       if (cellValue < rule.min) return rule.belowClass;
       if (cellValue > rule.max) return rule.aboveClass;
       return "";
@@ -186,40 +189,42 @@
     return "";
   }
 
-  // Refactored heat map function for alternatives
-  function getAltHeatClass(row: any, alt: { pct: number; isCorrect: boolean }): string {
+  // Configurable thresholds for alternative heat mapping
+  let altThresholdHigh: number = $state(10);
+  let altThresholdMedium: number = $state(5);
+  let altThresholdLow: number = $state(10);
+
+  // Refactored heat map function for alternatives with configurable thresholds
+  function getAltHeatClass(
+    row: any,
+    alt: { pct: number; isCorrect: boolean }
+  ): string {
     const correctAlt = row.alternatives.find((a: any) => a.isCorrect);
     const correctPct = correctAlt ? correctAlt.pct : 0;
     if (!alt.isCorrect) {
       const diff = alt.pct - correctPct;
-      if (diff > 10) return "heat-high"; // significantly more chosen → red
-      if (diff > 5) return "heat-medium"; // moderately more chosen → orange
-      if (alt.pct < 10) return "heat-cold";  // almost never chosen → "cold" (blue)
+      if (diff > altThresholdHigh) return "heat-high"; // significantly more chosen → red
+      if (diff > altThresholdMedium) return "heat-medium"; // moderately more chosen → orange
+      if (alt.pct < altThresholdLow) return "heat-cold"; // almost never chosen → "cold" (blue)
     }
-    // Future improvement: dynamically adjust intensity (e.g. inline style) based on diff.
     return "";
   }
 
-  let showModal = false;
-  let selectedRow: any = null;
+  let showModal = $state(false);
+  let selectedRow: any = $state(null);
 
   function openModal(row: any) {
     selectedRow = row;
     showModal = true;
   }
 
-  function closeModal() {
-    showModal = false;
-    selectedRow = null;
-  }
-
   // New export function to add a new sheet with table rows to the original workbook
   async function exportToExcel() {
-    if (!currentFile) {
+    if (!$file) {
       alert("No original file available for export.");
       return;
     }
-    const arrayBuffer = await currentFile.arrayBuffer();
+    const arrayBuffer = await $file.arrayBuffer();
     const workbook = read(arrayBuffer, { type: "array" });
 
     // Create a new sheet from table rows
@@ -241,13 +246,35 @@
 
 <div class="hide-print">
   <Card>
-    <svelte:fragment slot="title">
+    <div slot="title" class="flex-h">
       <Button onClick={() => (showToggleMenu = !showToggleMenu)} type="info">
         {#if showToggleMenu}Hide Column Menu{:else}Show Column Menu{/if}
       </Button>
       <!-- New Export Button -->
+      <div class="flex-h">
+        <label>
+          <span> High </span>
+          <ToolTip><div class="tooltip">Diff high</div></ToolTip>
+        </label>
+        <Numeric bind:value={altThresholdHigh} />
+      </div>
+      <div class="flex-h">
+        <label>
+          <span> Medium </span>
+          <ToolTip><div class="tooltip">Diff low</div></ToolTip>
+        </label>
+        <Numeric bind:value={altThresholdMedium} />
+      </div>
+      <div class="flex-h">
+        <label>
+          <span> Low </span>
+          <ToolTip><div class="tooltip">Low value in %</div></ToolTip>
+        </label>
+        <Numeric bind:value={altThresholdLow} />
+      </div>
+
       <Button onClick={exportToExcel} type="success">Export Table</Button>
-    </svelte:fragment>
+    </div>
     {#if showToggleMenu}
       <div>
         <h3>Toggle Columns</h3>
@@ -500,5 +527,8 @@
   .modal-content .title {
     display: flex;
     justify-content: space-between;
+  }
+  .tooltip {
+    width: 120px;
   }
 </style>
