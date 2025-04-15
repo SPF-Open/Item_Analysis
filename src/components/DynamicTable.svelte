@@ -29,79 +29,151 @@
 
   // Configure your columns here (the renderer formats the cell value)
   let columns: Column[] = [
-    { id: "page", label: "Page", renderer: (row) => row.page },
-    { id: "itemRank", label: "Item", renderer: (row) => row.itemRank },
+    { id: "page", label: "Page", renderer: (row) => row.page || "" },
+    { id: "itemRank", label: "Item", renderer: (row) => row.itemRank || "" },
     {
       id: "instruction",
       label: "Instruction",
-      renderer: (row) => row.instruction,
+      renderer: (row) => row.instruction || "",
     },
     {
       id: "duration_mean",
       label: "Mean",
-      renderer: (row) => row.duration_mean.toFixed(2) + "s",
+      renderer: (row) => {
+        try {
+          return row.duration_mean.toFixed(2) + "s";
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "duration_sd",
       label: "SD",
-      renderer: (row) => row.duration_sd.toFixed(2) + "s",
+      renderer: (row) => {
+        try {
+          return row.duration_sd.toFixed(2) + "s";
+        } catch {
+          return "";
+        }
+      },
     },
-    { id: "testCode", label: "Test Code", renderer: (row) => row.testCode },
-    { id: "diplome", label: "Diploma", renderer: (row) => row.diplome },
+    { id: "testCode", label: "Test Code", renderer: (row) => row.testCode || "" },
+    { id: "diplome", label: "Diploma", renderer: (row) => row.diplome || "" },
     {
       id: "nCandidates",
       label: "Total",
-      renderer: (row) => row.nCandidates,
+      renderer: (row) => row.nCandidates || "",
     },
     {
       id: "correct_pct",
       label: "Correct %",
-      renderer: (row) => row.correct_pct.toFixed(2) + "%",
+      renderer: (row) => {
+        try {
+          return row.correct_pct.toFixed(2) + "%";
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "incorrect_pct",
       label: "Incorrect %",
-      renderer: (row) => row.incorrect_pct.toFixed(2) + "%",
+      renderer: (row) => {
+        try {
+          return row.incorrect_pct.toFixed(2) + "%";
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "empty_pct",
       label: "Empty %",
-      renderer: (row) => row.empty_pct.toFixed(2) + "%",
+      renderer: (row) => {
+        try {
+          return row.empty_pct.toFixed(2) + "%";
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "not_seen_pct",
       label: "Not Seen %",
-      renderer: (row) => row.not_seen_pct.toFixed(2) + "%",
+      renderer: (row) => {
+        try {
+          return row.not_seen_pct.toFixed(2) + "%";
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "answered_pct",
       label: "Answered %",
-      renderer: (row) => row.answered_pct.toFixed(2) + "%",
+      renderer: (row) => {
+        try {
+          return row.answered_pct.toFixed(2) + "%";
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "difficulty",
       label: "Difficulty",
-      renderer: (row) => row.difficulty.toFixed(4),
+      renderer: (row) => {
+        try {
+          return row.difficulty.toFixed(4);
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "discr_comp",
       label: "Discr Comp",
-      renderer: (row) => row.discr_comp.toFixed(4),
+      renderer: (row) => {
+        try {
+          return row.discr_comp.toFixed(4);
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "discr_test",
       label: "Discr Test",
-      renderer: (row) => row.discr_test.toFixed(4),
+      renderer: (row) => {
+        try {
+          return row.discr_test.toFixed(4);
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "d_index_comp",
       label: "D-Index Comp",
-      renderer: (row) => row.d_index_comp.toFixed(4),
+      renderer: (row) => {
+        try {
+          return row.d_index_comp.toFixed(4);
+        } catch {
+          return "";
+        }
+      },
     },
     {
       id: "d_index_test",
       label: "D-Index Test",
-      renderer: (row) => row.d_index_test.toFixed(4),
+      renderer: (row) => {
+        try {
+          return row.d_index_test.toFixed(4);
+        } catch {
+          return "";
+        }
+      },
     },
   ];
 
@@ -164,7 +236,7 @@
   function getGroupBorderClass(colId: string): string {
     for (const group of groups) {
       if (group.ids.includes(colId)) {
-        const visibleGroupCols = group.ids.filter((id) => visibleColumns[id]);
+        const visibleGroupCols = group.ids.filter((id) => $visibleColumns[id]);
         if (
           visibleGroupCols.length &&
           visibleGroupCols[visibleGroupCols.length - 1] === colId
@@ -279,9 +351,9 @@
       <div>
         <h3>Toggle Columns</h3>
         <div class="switchs">
-          {#each Object.keys(visibleColumns) as colId}
+          {#each Object.keys($visibleColumns) as colId}
             <label class="switch">
-              <Switch bind:checked={visibleColumns[colId]} />
+              <Switch bind:checked={$visibleColumns[colId]} />
               <span>{colId}</span>
             </label>
           {/each}
@@ -295,13 +367,13 @@
   </Card>
 </div>
 
-<div class="table new-page">
+<div class="table">
   <Table>
     <thead>
       <!-- First header row: non-group columns and group headers -->
       <tr>
         {#each nonGroupColumns as col}
-          {#if visibleColumns[col.id]}
+          {#if $visibleColumns[col.id]}
             <th rowspan="2" class="group-border"
               >{col.label}
               {#if col.tooltip}
@@ -312,7 +384,7 @@
         {/each}
         {#each groups as group}
           {@const visibleCount = group.ids.filter(
-            (id) => visibleColumns[id]
+            (id) => $visibleColumns[id]
           ).length}
           {#if visibleCount > 0}
             <th colspan={visibleCount} class="txt-center group-header"
@@ -329,7 +401,7 @@
       <tr>
         {#each groups as group}
           {#each group.ids as colId}
-            {#if visibleColumns[colId]}
+            {#if $visibleColumns[colId]}
               <th class={getGroupBorderClass(colId)}>
                 {colMap[colId].label}
                 {#if colMap[colId].tooltip}
@@ -351,7 +423,7 @@
       {#each rows as row}
         <tr>
           {#each columns as col}
-            {#if visibleColumns[col.id]}
+            {#if $visibleColumns[col.id]}
               <td
                 class="{getColorClass(
                   col.id,
