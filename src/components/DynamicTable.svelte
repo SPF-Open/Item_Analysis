@@ -58,7 +58,11 @@
         }
       },
     },
-    { id: "testCode", label: "Test Code", renderer: (row) => row.testCode || "" },
+    {
+      id: "testCode",
+      label: "Test Code",
+      renderer: (row) => row.testCode || "",
+    },
     { id: "diplome", label: "Diploma", renderer: (row) => row.diplome || "" },
     {
       id: "nCandidates",
@@ -456,69 +460,76 @@
 </div>
 
 {#if showModal}
-  <Modal bind:state={showModal} size="">
-    <svelte:fragment slot="title">
-      <h3>Details for item : {selectedRow.itemRank}</h3>
-    </svelte:fragment>
-    <div class="modal-content">
-      <!-- Display detailed row info -->
-      {#if selectedRow}
-        <div>
-          <div class="flex-h">
-            {#each selectedRow.alternatives as alt, index}
-              <Card size="lg" status={alt.isCorrect ? "success" : undefined}>
-                <div slot="title" class="title">
-                  <span>
-                    Alternative {index + 1}
-                  </span>
-                  <span>
-                    {alt.pct.toFixed(2)}%
-                  </span>
-                </div>
-                <div>
-                  {alt.text}
-                </div>
-              </Card>
-            {/each}
+  <div class="modal">
+    <Modal bind:state={showModal} size="">
+      <svelte:fragment slot="title">
+        <h3>Details for item : {selectedRow.itemRank}</h3>
+      </svelte:fragment>
+      <div class="modal-content">
+        <!-- Display detailed row info -->
+        {#if selectedRow}
+          <div>
+            <div class="flex-h">
+              {#each selectedRow.alternatives as alt, index}
+                <Card size="lg" status={alt.isCorrect ? "success" : undefined}>
+                  <div slot="title" class="title">
+                    <span>
+                      Alternative {index + 1}
+                    </span>
+                    <span>
+                      {alt.pct.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div>
+                    {alt.text}
+                  </div>
+                </Card>
+              {/each}
+            </div>
           </div>
-        </div>
-      {/if}
-      <!-- Additional alternatives info and actions -->
-    </div>
-    <div class="modal-actions" slot="footer">
-      <LongText
-        disabled
-        cols={190}
-        rows={4}
-        placeholder="Additional info"
-        bind:value={selectedRow.extraInfo}
-      />
-      <div class="flex-h">
-        <ComboBox disabled>
-          <div slot="selected">
-            {selectedRow.action || "Choisir une action"}
-          </div>
-          <div slot="list">
-            <ComboBoxElement value="archive" bind:selection={selectedRow.action}
-              >Archiver</ComboBoxElement
-            >
-            <ComboBoxElement value="change" bind:selection={selectedRow.action}
-              >Modifier la bonne réponse</ComboBoxElement
-            >
-            <ComboBoxElement value="delete" bind:selection={selectedRow.action}
-              >Supprimer</ComboBoxElement
-            >
-            <ComboBoxElement value="other" bind:selection={selectedRow.action}
-              >Autre</ComboBoxElement
-            >
-          </div>
-        </ComboBox>
-        <Button type="danger" onClick={() => (showModal = false)}>Cancel</Button
-        >
-        <Button type="success" disabled>Save</Button>
+        {/if}
+        <!-- Additional alternatives info and actions -->
       </div>
-    </div>
-  </Modal>
+      <div class="modal-actions" slot="footer">
+        <LongText
+          disabled
+          cols={190}
+          rows={4}
+          placeholder="Additional info"
+          bind:value={selectedRow.extraInfo}
+        />
+        <div class="flex-h">
+          <ComboBox disabled>
+            <div slot="selected">
+              {selectedRow.action || "Choisir une action"}
+            </div>
+            <div slot="list">
+              <ComboBoxElement
+                value="archive"
+                bind:selection={selectedRow.action}>Archiver</ComboBoxElement
+              >
+              <ComboBoxElement
+                value="change"
+                bind:selection={selectedRow.action}
+                >Modifier la bonne réponse</ComboBoxElement
+              >
+              <ComboBoxElement
+                value="delete"
+                bind:selection={selectedRow.action}>Supprimer</ComboBoxElement
+              >
+              <ComboBoxElement value="other" bind:selection={selectedRow.action}
+                >Autre</ComboBoxElement
+              >
+            </div>
+          </ComboBox>
+          <Button type="danger" onClick={() => (showModal = false)}
+            >Cancel</Button
+          >
+          <Button type="success" disabled>Save</Button>
+        </div>
+      </div>
+    </Modal>
+  </div>
 {/if}
 
 <style>
@@ -583,10 +594,12 @@
   .table > :global(table) {
     border-collapse: collapse;
   }
+  .modal :global(.modal){
+    width: min(85vw, 1400px);
+  }
   .modal-content {
     padding: 1rem;
     max-height: 62vh;
-    width: min(1600px, 80vw);
     overflow-y: scroll;
     overflow-x: hidden;
   }
